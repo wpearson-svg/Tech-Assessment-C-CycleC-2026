@@ -5,10 +5,20 @@
 Please add your SQL query below AND add explanation of the query: 
 
 ```
-[Insert Code Here]
+SELECT e.FirstName, COUNT(o.orderid) AS order_count
+FROM employees e
+JOIN orders o ON e.employeeid = o.employeeid
+GROUP BY e.firstname;
 ```
 ```
-[Insert Explanation Here]
+SELECT e.FirstName, COUNT(o.orderid) AS order_count
+selecting the columns and counting the number of orders
+FROM employees e
+from the employees table and assing a nickname
+JOIN orders o ON e.employeeid = o.employeeid
+Join the tables via their employeeid columns
+GROUP BY e.firstname;
+Finally group by employee's first name
 ```
 
 4. For submission commit and push this .md file to Github
