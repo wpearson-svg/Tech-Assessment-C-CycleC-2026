@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 
 class Program
@@ -15,7 +16,9 @@ class Program
             {
                 // Read from .env file
                 string baseUrl = GetEnvironmentVariableFromDotEnv("API_BASE_URL") ?? "";
-                string url = baseUrl;
+                string url = baseUrl.Trim();
+                if (url == "")
+                    throw new Exception("API_BASE_URL not found. Check the .env file.");
                 
                 HttpResponseMessage response = await client.GetAsync(url);
                 
@@ -37,14 +40,34 @@ class Program
     }
     
     // Code to pull straight from .env file
-    static string GetEnvironmentVariableFromDotEnv(string variableName)
+    static string GetEnvironmentVariableFromDotEnv(string variableName, [CallerFilePath] string sourceFile = "")
     {
         try
         {
-            // Look for .env file in the current directory
-            string envFilePath = Path.Combine(Directory.GetCurrentDirectory(), "Task 3/.env");
-            
-            if (File.Exists(envFilePath))
+            // Look for .env in the current directory, the "Task 3" subfolder, or any parent directory
+            string? envFilePath = null;
+            // Start from the working directory, the build output, and the folder holding this source file
+            string?[] startDirs = { Directory.GetCurrentDirectory(), AppContext.BaseDirectory, Path.GetDirectoryName(sourceFile) };
+            foreach (string? start in startDirs)
+            {
+                if (string.IsNullOrEmpty(start)) continue;
+                DirectoryInfo? dir = new DirectoryInfo(start);
+                while (dir != null && envFilePath == null)
+                {
+                    foreach (string candidate in new[] { Path.Combine(dir.FullName, ".env"), Path.Combine(dir.FullName, "Task 3", ".env") })
+                    {
+                        if (File.Exists(candidate))
+                        {
+                            envFilePath = candidate;
+                            break;
+                        }
+                    }
+                    dir = dir.Parent;
+                }
+                if (envFilePath != null) break;
+            }
+
+            if (envFilePath != null)
             {
                 string[] lines = File.ReadAllLines(envFilePath);
                 
